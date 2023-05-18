@@ -1,92 +1,302 @@
-# PV056-Project-Ensembles
+# PV056-project
+
+This is a project for the PV056. 
+
+In this project I try to reproduce results from [Domain Adaptive Ensemble Learning (DAEL)](https://ieeexplore.ieee.org/abstract/document/9540778) and compare them with other methods in two problems that the DAEL focuses: Unsupervised Domain adaptation (UDA) and Domain Generalisation (DG)
+
+## Overview
+- [UDA](#uda)
+- [DG](#dg)
+- [Code used](#code-used)
+- [Datasets](#datasets)
+- [Results](#results)
+- [Implementation](#implementation)
+  - [Unsupervised Domain Adaptation](#unsupervised-domain-adaptation)
+  - [Domain Generalisation](#domain-generaistion)
 
 
+## UDA
 
-## Getting started
+We will compare two methods:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+[DAEL](https://ieeexplore.ieee.org/abstract/document/9540778) already mentioned and [M3SDA](https://arxiv.org/abs/1812.01754)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## DG
+We will compare two methods:
 
-## Add your files
+[DAEL](https://ieeexplore.ieee.org/abstract/document/9540778) already mentioned and [DDAIG](https://arxiv.org/abs/2003.06054)
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Code used:
+The paper provides implementations of both UDA and DG in [this gihub repository](https://github.com/KaiyangZhou/Dassl.pytorch). 
 
+How to use this repository and run in on specific datasets is described in the [Implementation](#implementation) part  
+(The repository includes also other methods, but we will use just DG and UDA)
+
+## Datasets 
+The list below each dataset shows all the different domains
+
+### For UDA:
+- Digit-5 - predicts numbers (0-9)
+  - MNIST
+  - MNIST-M
+  - USPS
+  - SVHS
+  - SYN
+- miniDomainNet - A subset of the [DomainNet](http://ai.bu.edu/M3SDA/)
+  - Clipart
+  - Painting
+  - Real
+  - Sketch
+
+In the paper the full domain net is also used. To reproduce the training as in the paper, it would take toomuch time and computational resources so I decided to skip it.
+
+### For DG:
+- PACS  - dog, elephant, giraffe, guitar, horse, house and person
+  - Photo
+  - Art painting 
+  - Cartoon
+  - Sketch
+- Office-Home - 65 categories related to office and home objects
+  - Artistic 
+  - Clipart 
+  - Product 
+  - Real World
+
+## Results
+
+### Unsupervised domain adaptation **UDA**
+Comparison of DAEL and M<sup>3</sup>SDA
+
+**Digit-5** (Accuracy/Macro F1)
+| Domain      | DAEL        | M<sup>3</sup>SDA |
+| ----------- | ----------- | -----------------|
+| MNIST-M     | 88.8%/88.8% |                  |
+| MNIST       | 99.4%/99.4% |                  |
+| USPS        | 98.8%/98.6% |                  |
+| SVHN        | 90.3%/89.4% |                  |
+| SYN         | 96.9%/96.9% |                  |
+
+**miniDomainNet** (Accuracy/Macro F1)
+| Domain      | DAEL        | M<sup>3</sup>SDA |
+| ----------- | ----------- | -----------------|
+| Sketch      | 53.0%/51.4% |                  |
+| Real        | 66.7%/64.5% |                  |
+| Painting    | 54.1%/51.3% | 52.2%/50.9%      |
+| Clipart     | 64.9%/63.0% | 60.2%/58.9%      |
+
+### Domain Generalisation **DG**
+Comparison of DAEL and DDAIG
+
+**PACS** (Accuracy/Macro F1)
+| Domain      | DAEL        | DDAIG            |
+| ----------- | ----------- | -----------------|
+| Sketch      | 77.3%/77.1% |                  |
+| Photo       | 94.9%/94.1% |                  |
+| Art Painting| 82.8%/82.2% |                  |
+| Cartoon     | 73.8%/74.2% |                  |
+
+**Office-home** (Accuracy/Macro F1)
+| Domain      | DAEL        | DDAIG            |
+| ----------- | ----------- | -----------------|
+| Art         | 59.3%/55.7% |                  |
+| Product     | 73.6%/71.4% |                  |
+| Real world  | 76.2%/74.6% |                  |
+| Clipart     | 55.2%/54.1% |                  |
+
+## Implementation
+
+### Requirements
+- python <= 3.8 (I was not able to run CUDA with 3.8 3.9 works fine)
+- git
+- conda (virtualenv should work too)
+- wget
+
+### Preparing repository
+```bash
+git clone https://github.com/KaiyangZhou/Dassl.pytorch.git
+cd Dassl.pytorch
+conda create -y -n dassl python=3.8 # 3.9 with cuda
+source activate dassl
+
+#For 3.8
+conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
+
+#For 3.9
+pip3 install torch torchvision torchaudio
+
+# Assuming you have the dassl virtual env activated
+pip3 install -r requirements.txt
+python setup.py develop
 ```
-cd existing_repo
-git remote add origin https://gitlab.fi.muni.cz/xhoufek/pv056-project-ensembles.git
-git branch -M main
-git push -uf origin main
+
+### Downloading datasets
+```bash
+pip install gdown
+mkdir data
+```
+**Digit-5**
+```bash
+mkdir data/digit5
+gdown https://drive.google.com/u/0/uc?id=1A4RJOFj4BJkmliiEL7g9WzNIDUHLxfmm&export=download
+unzip Digit-Five.zip -d data/digit5
+python digit5.py data/digit5
+```
+**Mini Domain Net**
+```bash
+mkdir data/domainnet
+wget http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/clipart.zip
+unzip clipart.zip -d data/domainnet
+wget http://csr.bu.edu/ftp/visda/2019/multi-source/groundtruth/painting.zip
+unzip painting.zip -d data/domainnet
+wget http://csr.bu.edu/ftp/visda/2019/multi-source/real.zip
+unzip real.zip -d data/domainnet
+wget http://csr.bu.edu/ftp/visda/2019/multi-source/sketch.zip
+unzip sketch.zip -d data/domainnet
+gdown https://drive.google.com/u/0/uc?id=15rrLDCrzyi6ZY-1vJar3u7plgLe4COL7&export=download
+unzip splits_mini.zip -d data/domainnet
+```
+**PACS and Office-Home**
+
+These datasets will be installed when running the training with given parameters
+
+## Unsupervised Domain Adaptation
+### Training the DAEL
+Create folder to store training info and results in
+```bash
+mkdir training_results
+```
+**Running DAEL on Digit-5**
+- Source/Target domains to pick from (target domain is always only one):
+  - mnist
+  - mnist-m
+  - usps
+  - svhs
+  - syn
+```bash
+python tools/train.py \
+--root data \
+--trainer DAEL \
+--source-domains mnist mnist-m usps svhs\
+--target-domains syn \
+--dataset-config-file configs/datasets/da/digit5.yaml \
+--config-file configs/trainers/da/dael/digit5.yaml \
+--output-dir training_results/dael-da-digit5-syn
+```
+**Running DAEL on miniDomainNet dataset**
+- Source/Target domains to pick from (target domain is always only one):
+  - clipart
+  - painting
+  - real
+  - sketch
+```bash
+python tools/train.py \
+--root data \
+--trainer DAEL \
+--source-domains clipart real sketch \
+--target-domains painting \
+--dataset-config-file configs/datasets/da/mini_domainnet.yaml \
+--config-file configs/trainers/da/dael/mini_domainnet.yaml \
+--output-dir training_results/dael-da-mini_domainnet-painting
+```
+### Training the M3SDA
+**Running M3SDA on Digit-5 dataset**
+- Source/Target domains to pick from (target domain is always only one):
+  - mnist
+  - mnist-m
+  - usps
+  - svhs
+  - syn
+```bash
+python tools/train.py \
+--root data \
+--trainer DAEL \
+--source-domains mnist mnist-m usps svhs\
+--target-domains syn \
+--dataset-config-file configs/datasets/da/digit5.yaml \
+--config-file configs/trainers/da/m3sda/digit5.yaml \
+--output-dir training_results/m3sda-da-digit5-syn
+```
+**Running M3SDA on miniDomainNet dataset**
+- Source/Target domains to pick from (target domain is always only one):
+  - clipart
+  - painting
+  - real
+  - sketch
+```bash
+python tools/train.py \
+--root data \
+--trainer M3SDA \
+--source-domains clipart real sketch \
+--target-domains painting \
+--dataset-config-file configs/datasets/da/mini_domainnet.yaml \
+--config-file configs/trainers/da/m3sda/mini_domainnet.yaml \
+--output-dir training_results/m3sda-da-mini_domainnet-painting
 ```
 
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.fi.muni.cz/xhoufek/pv056-project-ensembles/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Domain Generaistion
+### Training the DAEL
+**Running DAEL on PACS dataset**
+- Source/Target domains to pick from (target domain is always only one):
+  - photo
+  - cartoon
+  - sketch
+  - art_painting
+```bash
+python tools/train.py \
+--root data \
+--trainer DAELDG \
+--source-domains photo cartoon sketch \
+--target-domains art_painting \
+--dataset-config-file configs/datasets/dg/pacs.yaml \
+--config-file configs/trainers/dg/daeldg/pacs.yaml \
+--output-dir training_results/dael-dg-pacs-art_painting
+```
+**Running DAEL on Office-Home**
+- Source/Target domains to pick from (target domain is always only one):
+  - real_world
+  - clipart
+  - product
+  - art
+```bash
+python tools/train.py \
+--root data \
+--trainer DAELDG \
+--source-domains real_world clipart product \
+--target-domains art \
+--dataset-config-file configs/datasets/dg/office_home_dg.yaml \
+--config-file configs/trainers/dg/daeldg/office_home_dg.yaml \
+--output-dir training_results/dael-dg-office_home-art
+```
+### Training the DDAIG 
+**Running DDAIG  on PACS dataset**
+- Source/Target domains to pick from (target domain is always only one):
+  - photo
+  - cartoon
+  - sketch
+  - art_painting
+```bash
+python tools/train.py \
+--root data \
+--trainer DDAIG \
+--source-domains photo cartoon sketch \
+--target-domains art_painting \
+--dataset-config-file configs/datasets/dg/pacs.yaml \
+--config-file configs/trainers/dg/ddaig/pacs.yaml \
+--output-dir training_results/ddaig-dg-pacs-art_painting
+```
+**Running DDAIG on Office-Home**
+- Source/Target domains to pick from (target domain is always only one):
+  - real_world
+  - clipart
+  - product
+  - art
+```bash
+python tools/train.py \
+--root data \
+--trainer DDAIG \
+--source-domains real_world clipart product \
+--target-domains art \
+--dataset-config-file configs/datasets/dg/office_home_dg.yaml \
+--config-file configs/trainers/dg/ddaig/office_home_dg.yaml \
+--output-dir training_results/ddaig-dg-office_home-art
+```
